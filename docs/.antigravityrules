@@ -1,0 +1,23 @@
+# Agent Execution Rules — Campus Queue Project
+
+## 1. Context Consciousness
+- Always read `docs/01-prd-and-architecture.md` and `docs/02-backend-schema-plan.md` before generating or modifying code.
+- **Tech Stack (Backend):** Bun runtime, ElysiaJS framework, Drizzle ORM, MySQL (mysql2 driver).
+- **Tech Stack (Frontend):** React (Vite), Tailwind CSS, Lucide React. NO Supabase client dependency.
+
+## 2. Coding Standards & Integrity
+- DO NOT use Supabase JS Client or any Supabase-specific APIs (RPC, Realtime Channels, Auth).
+- All backend logic lives in `/backend/src/`. All routes must be registered on the ElysiaJS app instance.
+- Use TypeScript for all backend and frontend files. Avoid `any` types.
+- Always handle errors gracefully: return structured JSON `{ success: false, message: "..." }` from API, show Toast in UI.
+- Never hardcode credentials; always use `.env` variables via `Bun.env` on the backend.
+
+## 3. Database Interaction Rules
+- To create a queue ticket, ALWAYS use a **Drizzle transaction** (`db.transaction()`) that locks the `layanan` row before incrementing `nomor_terakhir`. NEVER do a plain UPDATE without a transaction.
+- Schema is defined in `backend/src/db/schema.ts`. Do NOT alter the database directly; always generate a migration via `bunx drizzle-kit generate` first.
+- All timestamps use `Asia/Jakarta` timezone. The MySQL connection must set `timezone: '+07:00'`.
+
+## 4. API & Realtime Rules
+- Frontend communicates with the backend via `fetch()` calls to `/api/...` endpoints.
+- Real-time updates (for the display screen and petugas dashboard) are delivered via **Server-Sent Events (SSE)** implemented in Elysia. Do NOT use WebSockets unless explicitly requested.
+- All petugas-only endpoints MUST be protected by the ElysiaJS JWT middleware. Check the `Authorization: Bearer <token>` header.

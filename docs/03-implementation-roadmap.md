@@ -1,0 +1,48 @@
+# Implementation Roadmap & Production Guidelines
+
+## Phase 1: Backend Foundation (Day 1-2)
+- [x] Initialize `/backend` with Bun (`bun init`).
+- [x] Install: `elysia`, `drizzle-orm`, `mysql2`, `drizzle-kit`, `@elysiajs/cors`, `@elysiajs/jwt`, `@elysiajs/swagger`.
+- [x] Define schema in `backend/src/db/schema.ts` (tabel: `layanan`, `petugas`, `antrean`).
+- [ ] Setup local MySQL database `antrean_kampus` & create `.env` with `DATABASE_URL`.
+- [ ] Run `bunx drizzle-kit generate` & `bunx drizzle-kit migrate` to apply schema.
+- [ ] Seed dummy data for `layanan` (e.g., "Legalisir Ijazah [A]", "Konsultasi KRS [B]").
+- [ ] Seed test `petugas` record with hashed password.
+
+## Phase 2: Core API Routes (Day 3-5)
+- [ ] **`POST /antrean/ambil`**: Atomic queue ticket creation (Drizzle transaction + row lock).
+- [ ] **`GET /antrean/:bookingCode`**: Public status check for student ticket.
+- [ ] **`DELETE /antrean/:bookingCode`**: Student cancels own ticket.
+- [ ] **`POST /petugas/login`**: Auth endpoint, returns signed JWT.
+- [ ] **`POST /petugas/panggil`**: Call next number (JWT protected).
+- [ ] **`POST /petugas/selesai`**: Mark as done (JWT protected).
+- [ ] **`POST /petugas/lewati`**: Skip number (JWT protected).
+- [ ] **`GET /display`**: Public endpoint for TV display board data.
+- [ ] **`GET /display/sse`**: SSE stream for real-time display updates.
+
+## Phase 3: Core Frontend Development (Day 6-9)
+- [ ] **Setup Stack:** React + Vite + Tailwind CSS + Lucide Icons. Remove Supabase dependencies.
+- [ ] **Mahasiswa Page (`/` & `/tiket/:bookingCode`):**
+  - Form pilih layanan.
+  - Call `POST /api/antrean/ambil`.
+  - Simpan state di `localStorage` & tampilkan Tiket QR Code (`qrcode.react`).
+- [ ] **Public Display Page (`/display`):**
+  - Tampilan TV Fullscreen dengan nomor sedang dipanggil per loket.
+  - Connect ke SSE endpoint `/api/display/sse`.
+  - Integrasi Web Speech API (TTS) untuk pemanggilan suara otomatis.
+  - Fallback polling ke `GET /api/display` setiap 30 detik.
+- [ ] **Dashboard Petugas (`/petugas`):**
+  - Login form → simpan JWT di `localStorage`.
+  - Action buttons: "Panggil Berikutnya", "Panggil Ulang", "Selesai", "Lewati".
+
+## Phase 4: Production Hardening & Testing (Day 10)
+- [ ] **Race Condition Testing:** Jalankan concurrent requests ke `POST /antrean/ambil` (e.g., 10 request simultan via k6 atau `Promise.all`). Pastikan tidak ada `nomor_urut` duplikat.
+- [ ] **SSE Disconnection Test:** Putus koneksi lalu sambungkan kembali. Pastikan UI re-sync otomatis.
+- [ ] **JWT Expiry Test:** Pastikan expired token diblokir dengan HTTP 401.
+
+## Phase 5: CI/CD Deployment (Day 11)
+1. Push repo ke GitHub.
+2. Deploy backend ke Railway / Render (support Bun).
+3. Deploy frontend ke Vercel / Netlify.
+4. Configure environment variables di hosting platform.
+5. Production Smoke Testing.
