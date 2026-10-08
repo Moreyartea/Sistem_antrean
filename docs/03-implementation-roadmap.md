@@ -4,21 +4,24 @@
 - [x] Initialize `/backend` with Bun (`bun init`).
 - [x] Install: `elysia`, `drizzle-orm`, `mysql2`, `drizzle-kit`, `@elysiajs/cors`, `@elysiajs/jwt`, `@elysiajs/swagger`.
 - [x] Define schema in `backend/src/db/schema.ts` (tabel: `layanan`, `petugas`, `antrean`).
-- [ ] Setup local MySQL database `antrean_kampus` & create `.env` with `DATABASE_URL`.
-- [ ] Run `bunx drizzle-kit generate` & `bunx drizzle-kit migrate` to apply schema.
-- [ ] Seed dummy data for `layanan` (e.g., "Legalisir Ijazah [A]", "Konsultasi KRS [B]").
-- [ ] Seed test `petugas` record with hashed password.
+- [x] Setup local MySQL database `sistem_antrean` & create `.env` with `DATABASE_URL`.
+- [x] Run `bunx drizzle-kit generate` & `bunx drizzle-kit migrate` to apply schema.
+- [x] Seed dummy data for `layanan` (Legalisir, KRS, Keuangan).
+- [x] Seed test `petugas` record with hashed password (admin & loket attendants).
 
-## Phase 2: Core API Routes (Day 3-5)
-- [ ] **`POST /antrean/ambil`**: Atomic queue ticket creation (Drizzle transaction + row lock).
-- [ ] **`GET /antrean/:bookingCode`**: Public status check for student ticket.
-- [ ] **`DELETE /antrean/:bookingCode`**: Student cancels own ticket.
-- [ ] **`POST /petugas/login`**: Auth endpoint, returns signed JWT.
-- [ ] **`POST /petugas/panggil`**: Call next number (JWT protected).
-- [ ] **`POST /petugas/selesai`**: Mark as done (JWT protected).
-- [ ] **`POST /petugas/lewati`**: Skip number (JWT protected).
-- [ ] **`GET /display`**: Public endpoint for TV display board data.
-- [ ] **`GET /display/sse`**: SSE stream for real-time display updates.
+## Phase 2: Core API Routes & JWT Auth (Day 3-5)
+- [x] **`POST /api/antrean/ambil`**: Atomic queue ticket creation (Drizzle transaction + row lock `FOR UPDATE`).
+- [x] **`GET /api/antrean/:bookingCode`**: Public status check for student ticket with ahead-of-queue counter.
+- [x] **`DELETE /api/antrean/:bookingCode`**: Student cancels own ticket.
+- [x] **`POST /api/petugas/login`**: Auth endpoint with Bun native password verification, returns signed JWT.
+- [x] **`GET /api/petugas/me`**: Attendant profile & assigned loket.
+- [x] **`POST /api/petugas/panggil`**: Call next number (JWT protected).
+- [x] **`POST /api/petugas/panggil-ulang`**: Re-call current number (JWT protected).
+- [x] **`POST /api/petugas/layani`**: Mark ticket as in-service (JWT protected).
+- [x] **`POST /api/petugas/selesai`**: Mark ticket as done (JWT protected).
+- [x] **`POST /api/petugas/lewati`**: Skip number (JWT protected).
+- [x] **`GET /api/display`**: Public endpoint for TV display board data snapshot.
+- [x] **`GET /api/display/sse`**: SSE stream for real-time display updates.
 
 ## Phase 3: Core Frontend Development (Day 6-9)
 - [ ] **Setup Stack:** React + Vite + Tailwind CSS + Lucide Icons. Remove Supabase dependencies.
