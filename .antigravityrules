@@ -1,5 +1,7 @@
 # Panduan AI - Sistem Antrean Kampus
-- Tumpukan teknologi: React (Vite), Tailwind CSS v4, Lucide React, @supabase/supabase-js, react-router-dom.
+- Tumpukan teknologi:
+  - Backend: Bun, ElysiaJS, Drizzle ORM, MySQL (mysql2 driver).
+  - Frontend: React (Vite), Tailwind CSS v4, Lucide React, react-router-dom.
 - Desain UI: Gunakan gaya Neo-Brutalism. Terapkan Dark Mode secara default dengan warna latar belakang hitam/abu-abu sangat gelap, dan gunakan aksen warna Electric Cyber Lime (#ccff00) atau Electric Blue untuk tombol dan elemen interaktif. Gunakan border tebal, bayangan tajam (solid shadows), dan bentuk geometris yang tegas.
-- Larangan: Jangan buat backend Express/Node.js. Semua database fetch/insert wajib menggunakan Supabase client.
+- Backend Architecture: Semua operasi database dilakukan melalui backend ElysiaJS di `/backend` dengan Drizzle ORM.
 - Aturan Koding: Selalu baca file di dalam folder /docs sebelum membuat logika database atau UI.
