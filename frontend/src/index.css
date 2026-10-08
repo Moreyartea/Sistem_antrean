@@ -1,1 +1,207 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-cyber-lime: #ccff00;
+    --color-cyber-cyan: #00e5ff;
+    --color-cyber-pink: #ff007f;
+    --color-dark-bg: #0a0b0e;
+    --color-dark-surface: #12141a;
+    --color-dark-card: #181b24;
+    --color-dark-border: #282e3d;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #0a0b0e;
+    color: #f4f4f5;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar for Neo-Brutalist look */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0e1017;
+    border-left: 2px solid #202636;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #ccff00;
+    border: 2px solid #000000;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b8e600;
+  }
+}
+
+/* Neo-Brutalist Utilities */
+.font-mono-brutal {
+  font-family: 'Space Mono', monospace;
+}
+
+.neo-box {
+  background-color: #141720;
+  border: 3px solid #2c3345;
+  box-shadow: 5px 5px 0px 0px #000000;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neo-box-lime {
+  background-color: #141720;
+  border: 3px solid #ccff00;
+  box-shadow: 5px 5px 0px 0px #ccff00;
+}
+
+.neo-box-cyan {
+  background-color: #141720;
+  border: 3px solid #00e5ff;
+  box-shadow: 5px 5px 0px 0px #00e5ff;
+}
+
+.neo-card {
+  background-color: #161a24;
+  border: 2px solid #2e364a;
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-card:hover {
+  border-color: #444e68;
+}
+
+.neo-shadow-sm {
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.neo-shadow-md {
+  box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.neo-shadow-lg {
+  box-shadow: 7px 7px 0px 0px #000000;
+}
+
+.neo-shadow-lime {
+  box-shadow: 4px 4px 0px 0px #ccff00;
+}
+
+.neo-shadow-lime-lg {
+  box-shadow: 6px 6px 0px 0px #ccff00;
+}
+
+.neo-shadow-cyan {
+  box-shadow: 4px 4px 0px 0px #00e5ff;
+}
+
+/* Interactive Neo-Brutalist Buttons */
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid #000000;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+  cursor: pointer;
+}
+
+.neo-btn:hover:not(:disabled) {
+  transform: translate(-3px, -3px);
+}
+
+.neo-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px 0px #000000 !important;
+}
+
+.neo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.neo-btn-lime {
+  background-color: #ccff00;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-btn-lime:hover:not(:disabled) {
+  box-shadow: 7px 7px 0px 0px #000000;
+}
+
+.neo-btn-cyan {
+  background-color: #00e5ff;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-btn-cyan:hover:not(:disabled) {
+  box-shadow: 7px 7px 0px 0px #000000;
+}
+
+.neo-btn-dark {
+  background-color: #1e222e;
+  color: #f4f4f5;
+  border: 2px solid #3d465c;
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-btn-dark:hover:not(:disabled) {
+  background-color: #272d3e;
+  border-color: #ccff00;
+  box-shadow: 6px 6px 0px 0px #ccff00;
+}
+
+/* Neo-Brutalist Badges */
+.neo-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* Animations */
+@keyframes pulse-lime-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(204, 255, 0, 0.4), 6px 6px 0px 0px #ccff00;
+    border-color: #ccff00;
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(204, 255, 0, 0.8), 8px 8px 0px 0px #ccff00;
+    border-color: #ffffff;
+  }
+}
+
+.animate-call-pulse {
+  animation: pulse-lime-glow 1.6s infinite ease-in-out;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
