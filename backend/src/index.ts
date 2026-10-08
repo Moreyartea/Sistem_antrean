@@ -5,6 +5,7 @@ import { layananRoutes } from "./routes/layanan";
 import { antreanRoutes } from "./routes/antrean";
 import { petugasRoutes } from "./routes/petugas";
 import { displayRoutes } from "./routes/display";
+import { engine, io } from "./realtime/socket";
 
 const PORT = Number(Bun.env.PORT) || 3000;
 
@@ -14,9 +15,11 @@ const app = new Elysia()
     cors({
       origin: [
         "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:4173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:4173",
       ],
       credentials: true,
@@ -24,6 +27,9 @@ const app = new Elysia()
       allowedHeaders: ["Content-Type", "Authorization"],
     })
   )
+
+  // Socket.IO request handler (Bun Engine)
+  .all("/socket.io/*", ({ request, server }) => engine.handleRequest(request, server!))
 
   // Dokumentasi Interaktif Swagger UI / OpenAPI
   .use(
@@ -99,7 +105,10 @@ const app = new Elysia()
   .use(petugasRoutes)
   .use(displayRoutes)
 
-  .listen(PORT);
+  .listen({
+    port: PORT,
+    websocket: engine.handler().websocket as unknown as any,
+  });
 
 console.log(
   `\n🚀 Sistem Antrean Kampus Backend berjalan di http://localhost:${PORT}\n` +

@@ -24,6 +24,7 @@ import {
   BellRing,
 } from 'lucide-react';
 import { fetchLayanan, ambilNomorAntrean, cekStatusTiket, batalkanTiket } from '../lib/api';
+import { socket } from '../lib/socket';
 
 const LOCAL_STORAGE_KEY = 'kampus_antrean_active_ticket';
 
@@ -90,22 +91,42 @@ export default function AmbilAntreanPage() {
     init();
   }, []);
 
-  // Poll ticket status periodically if waiting or called
+  // Real-time update ticket status via Socket.io + Polling Fallback
   useEffect(() => {
     if (!activeTicket || ['selesai', 'dibatalkan', 'dilewati'].includes(activeTicket.status)) {
       return;
     }
 
-    const interval = setInterval(async () => {
+    const refreshCurrentTicket = async () => {
       try {
         const updated = await cekStatusTiket(activeTicket.bookingCode);
         setActiveTicket(updated);
       } catch (err) {
         console.warn('Auto-refresh status ticket failed:', err);
       }
-    }, 10000); // Poll every 10s
+    };
 
-    return () => clearInterval(interval);
+    // Socket.io listener for immediate update
+    const handleQueueUpdated = (payload) => {
+      if (
+        payload.bookingCode === activeTicket.bookingCode ||
+        payload.layananId === activeTicket.layananId
+      ) {
+        refreshCurrentTicket();
+      }
+    };
+
+    socket.on('queue:updated', handleQueueUpdated);
+    socket.on('antrean:dipanggil', handleQueueUpdated);
+
+    // 15s Safety polling
+    const interval = setInterval(refreshCurrentTicket, 15000);
+
+    return () => {
+      socket.off('queue:updated', handleQueueUpdated);
+      socket.off('antrean:dipanggil', handleQueueUpdated);
+      clearInterval(interval);
+    };
   }, [activeTicket]);
 
   // Handle Form Submit: Take queue ticket

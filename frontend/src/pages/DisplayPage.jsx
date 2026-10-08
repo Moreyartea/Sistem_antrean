@@ -22,12 +22,13 @@ import {
 } from 'lucide-react';
 import { fetchDisplaySnapshot, getSSEUrl } from '../lib/api';
 import { soundEngine } from '../lib/audio';
+import { socket } from '../lib/socket';
 
 export default function DisplayPage() {
   const [loketList, setLoketList] = useState([]);
   const [panggilanTerbaru, setPanggilanTerbaru] = useState([]);
   const [highlightCall, setHighlightCall] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'live' | 'polling' | 'connecting' | 'error'
+  const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'socket' | 'sse' | 'polling' | 'connecting'
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -60,70 +61,91 @@ export default function DisplayPage() {
     }
   }, []);
 
-  // SSE Setup & Fallback Polling
+  // Real-Time Subscriptions: Socket.io + Fallback Polling & SSE
   useEffect(() => {
     // Initial fetch
     loadSnapshot();
 
-    // 30s Fallback Polling
+    // 30s Safety Fallback Polling
     const pollingInterval = setInterval(() => {
       loadSnapshot();
     }, 30000);
 
-    // Setup EventSource (SSE)
+    // 1. Socket.io Event Listeners (Primary Realtime Engine)
+    const handleSocketConnect = () => {
+      setConnectionStatus('socket');
+    };
+
+    const handleSocketDisconnect = () => {
+      setConnectionStatus('polling');
+    };
+
+    const handleQueueUpdated = (payload) => {
+      loadSnapshot();
+
+      // If a ticket is called or recalled, trigger highlight and voice announcement
+      if (payload?.type === 'DIPANGGIL' || payload?.type === 'DIPANGGIL_ULANG') {
+        const ticketInfo = {
+          nomorDisplay: payload.nomorDisplay,
+          layananId: payload.layananId,
+          namaLayanan: payload.payload?.namaLayanan || 'Loket Pelayanan',
+          calledAt: payload.timestamp,
+        };
+
+        setHighlightCall(ticketInfo);
+
+        // Audio announcement with Web Audio chime + TTS
+        soundEngine.speakCall(ticketInfo.nomorDisplay, ticketInfo.namaLayanan);
+
+        if (highlightTimeoutRef.current) {
+          clearTimeout(highlightTimeoutRef.current);
+        }
+      }
+    };
+
+    const handleAntreanBaru = () => {
+      loadSnapshot();
+    };
+
+    if (socket.connected) {
+      setConnectionStatus('socket');
+    }
+
+    socket.on('connect', handleSocketConnect);
+    socket.on('disconnect', handleSocketDisconnect);
+    socket.on('queue:updated', handleQueueUpdated);
+    socket.on('antrean:dipanggil', handleQueueUpdated);
+    socket.on('antrean:baru', handleAntreanBaru);
+
+    // 2. Secondary Fallback SSE
     let sse;
     try {
       sse = new EventSource(getSSEUrl());
       eventSourceRef.current = sse;
 
       sse.onopen = () => {
-        setConnectionStatus('live');
+        if (!socket.connected) setConnectionStatus('sse');
       };
 
-      // Listen for connected message
-      sse.addEventListener('connected', () => {
-        setConnectionStatus('live');
-      });
-
-      // Listen for queue updates
       sse.addEventListener('queue_update', (event) => {
         try {
           const update = JSON.parse(event.data);
-          loadSnapshot();
-
-          // If a ticket is called or recalled, trigger highlight and voice announcement
-          if (update.type === 'DIPANGGIL' || update.type === 'DIPANGGIL_ULANG') {
-            const ticketInfo = {
-              nomorDisplay: update.nomorDisplay,
-              layananId: update.layananId,
-              namaLayanan: update.payload?.namaLayanan || 'Loket Pelayanan',
-              calledAt: update.timestamp,
-            };
-
-            setHighlightCall(ticketInfo);
-
-            // Audio announcement
-            soundEngine.speakCall(ticketInfo.nomorDisplay, ticketInfo.namaLayanan);
-
-            // Clear any previous timeout
-            if (highlightTimeoutRef.current) {
-              clearTimeout(highlightTimeoutRef.current);
-            }
-          }
+          handleQueueUpdated(update);
         } catch (e) {
           console.warn('Error parsing SSE event:', e);
         }
       });
-
-      sse.onerror = () => {
-        setConnectionStatus('polling');
-      };
     } catch (err) {
-      console.warn('SSE initialization failed:', err);
-      setConnectionStatus('polling');
+      console.warn('SSE fallback error:', err);
     }
 
     return () => {
+      socket.off('connect', handleSocketConnect);
+      socket.off('disconnect', handleSocketDisconnect);
+      socket.off('queue:updated', handleQueueUpdated);
+      socket.off('antrean:dipanggil', handleQueueUpdated);
+      socket.off('antrean:baru', handleAntreanBaru);
+
       if (sse) sse.close();
       clearInterval(pollingInterval);
       if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
@@ -233,18 +255,26 @@ export default function DisplayPage() {
             {/* Connection Status Indicator */}
             <div
               className={`neo-badge border-2 border-black ${
-                connectionStatus === 'live'
+                connectionStatus === 'socket'
+                  ? 'bg-[#153412] text-[#ccff00] border-[#ccff00] shadow-[0_0_10px_rgba(204,255,0,0.3)]'
+                  : connectionStatus === 'sse'
                   ? 'bg-[#153412] text-[#86efac] border-[#22c55e]'
                   : 'bg-[#3b2d10] text-[#fde047] border-[#eab308]'
               }`}
             >
               <Radio
                 className={`w-3.5 h-3.5 mr-1.5 ${
-                  connectionStatus === 'live' ? 'animate-pulse text-[#22c55e]' : 'text-[#eab308]'
+                  connectionStatus === 'socket' || connectionStatus === 'sse'
+                    ? 'animate-pulse text-[#ccff00]'
+                    : 'text-[#eab308]'
                 }`}
               />
               <span className="text-[11px] font-mono-brutal font-bold uppercase">
-                {connectionStatus === 'live' ? 'REALTIME LIVE' : 'POLLING 30s'}
+                {connectionStatus === 'socket'
+                  ? 'SOCKET.IO LIVE'
+                  : connectionStatus === 'sse'
+                  ? 'SSE LIVE'
+                  : 'POLLING 30s'}
               </span>
             </div>
 
